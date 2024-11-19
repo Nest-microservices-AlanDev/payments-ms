@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { envs } from 'src/config';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { envs, NATS_SERVICE } from 'src/config';
 import Stripe from 'stripe';
 import { PaymentsessionDto } from './dto';
 import { Request, Response } from 'express';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class PaymentsService {
   private readonly stripe = new Stripe(envs.stripe_secret);
+  private readonly logger = new Logger('PaymentService');
+
+  constructor(@Inject(NATS_SERVICE) private readonly client: ClientProxy) {}
 
   async createPaymentSession(paymentsessionDto: PaymentsessionDto) {
     const { currency, items, orderId } = paymentsessionDto;
@@ -28,15 +32,19 @@ export class PaymentsService {
       //colocar aqui id de la orden
       payment_intent_data: {
         metadata: {
-          orderId
-        }
+          orderId,
+        },
       },
       line_items: lineItems,
       mode: 'payment',
       success_url: `${envs.striipe_success_url}`,
       cancel_url: `${envs.striipe_cancel_url}`,
     });
-    return session;
+    return {
+      cancelUrl: session.cancel_url,
+      successUrl: session.success_url,
+      url: session.url,
+    };
   }
 
   async stripeWebhook(request: Request, response: Response) {
@@ -58,14 +66,16 @@ export class PaymentsService {
     switch (event.type) {
       case 'charge.succeeded':
         const chargeSucceded = event.data.object;
-        //TODO llamar a nuestri microservicio
-        console.log({
-          metadata: chargeSucceded.metadata,
-        });
+        const payload = {
+          stripePaymentId: chargeSucceded.id,
+          orderId: chargeSucceded.metadata.orderId,
+          reciptUrl: chargeSucceded.receipt_url,
+        };
+        this.client.emit('payment.succeded', payload);
         break;
 
       default:
-        break;
+        console.log(`Event ${event.type} not handled`);
     }
 
     return response.status(200).json({ signature });
