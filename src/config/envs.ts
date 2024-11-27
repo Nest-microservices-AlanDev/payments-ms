@@ -4,8 +4,8 @@ import * as joi from 'joi';
 interface EnvVars {
   PORT: number;
   STRIPE_SECRET: string;
-  STRIIPE_SUCCESS_URL: string;
-  STRIIPE_CANCEL_URL: string;
+  STRIPE_SUCCESS_URL: string;
+  STRIPE_CANCEL_URL: string;
   STRIPE_ENDPOINTSECRET: string;
   NATS_SERVERS: string[];
 }
@@ -14,8 +14,8 @@ const envsSchema = joi
   .object({
     PORT: joi.number().required(),
     STRIPE_SECRET: joi.string().required(),
-    STRIIPE_SUCCESS_URL: joi.string().required(),
-    STRIIPE_CANCEL_URL: joi.string().required(),
+    STRIPE_CANCEL_URL: joi.string().required(),
+    STRIPE_SUCCESS_URL: joi.string().required(),
     STRIPE_ENDPOINTSECRET: joi.string().required(),
     NATS_SERVERS: joi.array().items(joi.string()).required(),
   })
@@ -27,7 +27,7 @@ const { error, value } = envsSchema.validate({
 });
 
 if (error) {
-  throw new Error(`Config validation error {error.message}`);
+  throw new Error(`Config validation error ${error.message}`);
 }
 
 const envVars: EnvVars = value;
@@ -35,8 +35,8 @@ const envVars: EnvVars = value;
 export const envs = {
   port: envVars.PORT,
   stripe_secret: envVars.STRIPE_SECRET,
-  striipe_success_url: envVars.STRIIPE_SUCCESS_URL,
-  striipe_cancel_url: envVars.STRIIPE_CANCEL_URL,
+  stripe_success_url: envVars.STRIPE_SUCCESS_URL,
+  stripe_cancel_url: envVars.STRIPE_CANCEL_URL,
   stripe_endpointsecret: envVars.STRIPE_ENDPOINTSECRET,
   natsServers: envVars.NATS_SERVERS,
 };

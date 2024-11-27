@@ -37,8 +37,8 @@ export class PaymentsService {
       },
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${envs.striipe_success_url}`,
-      cancel_url: `${envs.striipe_cancel_url}`,
+      success_url: `${envs.stripe_success_url}`,
+      cancel_url: `${envs.stripe_cancel_url}`,
     });
     return {
       cancelUrl: session.cancel_url,
